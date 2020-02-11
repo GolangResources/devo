@@ -129,6 +129,9 @@ func (s *DevoClient) QueryRaw(from int64, to int64, query string, resultmsg chan
 			ch = true
 		}
 	}
+	re := regexp.MustCompile(`(^.*,"object":\[)`)
+	re2 := regexp.MustCompile(`(^ *,{)`)
+	re3 := regexp.MustCompile(`(} *,{)`)
 	if ch == true {
 		if s.Debug {
 			log.Println("resp", resp)
@@ -145,6 +148,7 @@ func (s *DevoClient) QueryRaw(from int64, to int64, query string, resultmsg chan
 			}
 			data = []byte(strings.Replace(string(data), "}, {", "},{", -1))
 			data = []byte(strings.Replace(string(data), "} ,{", "},{", -1))
+			data = []byte(re3.ReplaceAllString(string(data), "},{"))
 			if i := strings.Index(string(data), "},{"); i >= 0 {
 				//return i + 1, data[0:i], nil
 				return i + 1, data[1:i+1], nil
@@ -157,8 +161,6 @@ func (s *DevoClient) QueryRaw(from int64, to int64, query string, resultmsg chan
 		}
 		scanner.Split(split)
 		lh := false
-		re := regexp.MustCompile(`(^.*,"object":\[)`)
-		re2 := regexp.MustCompile(`(^ *,{)`)
 		for scanner.Scan() {
 			lastLine = scanner.Text()
 			if (lh == false) {
